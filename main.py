@@ -45,9 +45,7 @@ class Main_UI(QMainWindow):
                 if file_name.endswith(".jpg"):
                     self.files.append(os.path.join(self.loadFiles, file_name))
             self.current_file=0
-            print('get_ans')
             HW2.get_ans(self)
-            print('show_img')
             HW2.show_image(self)
     def pushButton2F(self):
         if(self.current_file==0):
@@ -59,6 +57,7 @@ class Main_UI(QMainWindow):
         if(self.current_file==len(self.files)-1):
             QMessageBox.warning(self, "操作錯誤提示", "已經是最後1張影像")
         else:
+            
             self.current_file=self.current_file+1
             HW2.show_image(self)
     def pushButton4F(self):
@@ -67,6 +66,8 @@ class Main_UI(QMainWindow):
             QMessageBox.warning(self, "影像判別異常", "沒有找到舟骨")
         elif(error==1):
             QMessageBox.warning(self, "影像判別異常", "沒有找到骨折")
+        elif(error==2):
+            QMessageBox.warning(self, "影像判別異常", "標準答案沒有骨折")
         #HW2.show_result(self)
         
 
