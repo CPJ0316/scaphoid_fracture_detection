@@ -21,6 +21,8 @@ class Main_UI(QMainWindow):
         self.answer=[]
         self.predict=[]
         self.current_file=0
+        self.part1_img=None
+        self.part2_img=None
         self.basename=""
         HW2.initial(self)
         self.Connect_btn()
@@ -60,9 +62,11 @@ class Main_UI(QMainWindow):
             self.current_file=self.current_file+1
             HW2.show_image(self)
     def pushButton4F(self):
-        error=HW2.calculate_result(self)
+        error=HW2.calculate_one_result(self)
         if(error==0):
             QMessageBox.warning(self, "影像判別異常", "沒有找到舟骨")
+        elif(error==1):
+            QMessageBox.warning(self, "影像判別異常", "沒有找到骨折")
         #HW2.show_result(self)
         
 
