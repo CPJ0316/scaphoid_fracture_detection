@@ -9,6 +9,7 @@ import json
 from ultralytics import YOLO
 from torchvision import transforms as T
 from sklearn.metrics import accuracy_score, recall_score, precision_score
+from shapely.geometry import Polygon
 
 def initial(self):
     self.device=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -87,11 +88,25 @@ def get_tar_box(path):
             data = json.load(file)            
     temp_df = pd.json_normalize(data)# 將 JSON 轉換為 DataFrame
     tar_box=temp_df["bbox"].iloc[0]
+    return tar_box
 
     
-def calculate_iou(pre_box,target_box):
-    #確定
-    print('temp')
+def calculate_iou(pre_box,tar_box):
+#    pre_box = [x1, y1, x2, y2, x3, y3, x4, y4]  # 預測框
+#    tar_box = [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]  # 目標框
+
+    # 將 pre_box 轉換為多邊形
+    #pre_polygon = Polygon([(pre_box[0], pre_box[1]), (pre_box[2], pre_box[3]), 
+    #                    (pre_box[4], pre_box[5]), (pre_box[6], pre_box[7])])
+    pre_polygon = Polygon(pre_box)
+    # 將 tar_box 轉換為多邊形
+    tar_polygon = Polygon(tar_box)
+    intersection_area = pre_polygon.intersection(tar_polygon).area #交集
+    union_area = pre_polygon.union(tar_polygon).area #聯集
+    # 計算 IOU
+    iou = intersection_area / union_area
+    return iou
+
     
 def calculate_one_result(self):
     transform = T.ToTensor()
@@ -131,13 +146,11 @@ def calculate_one_result(self):
         self.label_4.setText("IoU:"+str(self.Iou))
         return 1
     if(self.answer.loc[self.answer["basename"] == basename, "answer"].iloc[0]==1):
-        tar_box=get_tar_box(self.files[self.current_file])
-        print(tar_box)
-        pre_box_ori=result.obb.xyxy[0].tolist()
-        x_min, y_min, x_max, y_max = pre_box_ori  # 分別取出座標
-        pre_box = [x_min, x_max, y_min, y_max] 
-        self.Iou=100
-        #calculate_iou(pre_box,tar_box)
+        tar_box=get_tar_box(self.files[self.current_file])        
+        pre_box=result.obb.xyxyxyxy[0].tolist() #[x1, y1, x2, y2, x3, y3, x4, y4] 
+        self.Iou=calculate_iou(pre_box,tar_box)
+        #pre_box=[x1, y1, x2, y2, x3, y3, x4, y4] 
+        #tar_box=[[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
         self.label_4.setText("IoU:"+str(self.Iou))
     else:
         self.Iou=0
