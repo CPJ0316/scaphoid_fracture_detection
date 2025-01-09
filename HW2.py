@@ -96,8 +96,6 @@ def calculate_iou(pre_box,tar_box):
 #    tar_box = [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]  # 目標框
 
     # 將 pre_box 轉換為多邊形
-    #pre_polygon = Polygon([(pre_box[0], pre_box[1]), (pre_box[2], pre_box[3]), 
-    #                    (pre_box[4], pre_box[5]), (pre_box[6], pre_box[7])])
     pre_polygon = Polygon(pre_box)
     # 將 tar_box 轉換為多邊形
     tar_polygon = Polygon(tar_box)
@@ -131,27 +129,39 @@ def calculate_one_result(self):
         for box in result.obb.xyxyxyxy:  # 迭代每个检测框的多边形
             points = np.array(box.tolist(), dtype=np.int32).reshape((-1, 1, 2))# 转换为 NumPy 数组并调整形状
             cv2.polylines(part1_img_np, [points], isClosed=True, color=(255,255, 255), thickness=2)# 使用 cv2.polylines 绘制封闭的多边形
-        plt.figure()
-        plt.imshow(cv2.cvtColor(part1_img_np, cv2.COLOR_BGR2RGB))  # 转换为 RGB 格式以供显示
-        plt.title('Fracture Detection')
-        plt.axis("off")  # 隐藏坐标轴
-        plt.show()
     else:
+        part1_img_np_ori=cv2.cvtColor(part1_img_np_ori, cv2.COLOR_BGR2RGB)
+        if(self.answer.loc[self.answer["basename"] == basename, "answer"].iloc[0]==1):
+            tar_box=get_tar_box(self.files[self.current_file])        
+            tar_box=[tar_box]#[[[x1,y1],[x2,y2],[x3,y3],[x4,y4]]]
+            for box in tar_box:
+                points = np.array(box, dtype=np.int32).reshape((-1, 1, 2))
+                cv2.polylines(part1_img_np_ori, [points], isClosed=True, color=(150,0,150), thickness=2)
         plt.figure()
-        plt.imshow(cv2.cvtColor(part1_img_np_ori, cv2.COLOR_BGR2RGB))  # 转换为 RGB 格式以供显示
+        plt.imshow(part1_img_np_ori)  # 转换为 RGB 格式以供显示
         plt.title('Fracture Detection')
         plt.axis("off")  # 隐藏坐标轴
         plt.show()
         self.Iou=0
         self.label_4.setText("IoU:"+str(self.Iou))
         return 1
+    
     if(self.answer.loc[self.answer["basename"] == basename, "answer"].iloc[0]==1):
         tar_box=get_tar_box(self.files[self.current_file])        
-        pre_box=result.obb.xyxyxyxy[0].tolist() #[x1, y1, x2, y2, x3, y3, x4, y4] 
+        pre_box=result.obb.xyxyxyxy[0].tolist() #[[x1,y1],[x2,y2],[x3,y3],[x4,y4]] 
         self.Iou=calculate_iou(pre_box,tar_box)
-        #pre_box=[x1, y1, x2, y2, x3, y3, x4, y4] 
-        #tar_box=[[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
+        tar_box=[tar_box]
         self.label_4.setText("IoU:"+str(self.Iou))
+        part1_img_np=cv2.cvtColor(part1_img_np, cv2.COLOR_BGR2RGB)
+        #[[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
+        for box in tar_box:  # 迭代每个检测框的多边形
+            points = np.array(box, dtype=np.int32).reshape((-1, 1, 2))# 转换为 NumPy 数组并调整形状
+            cv2.polylines(part1_img_np, [points], isClosed=True, color=(150,0,150), thickness=2)# 使用 cv2.polylines 绘制封闭的多边形
+        plt.figure()
+        plt.imshow(part1_img_np)  # 转换为 RGB 格式以供显示
+        plt.title('Fracture Detection')
+        plt.axis("off")  # 隐藏坐标轴
+        plt.show()
     else:
         self.Iou=0
         self.label_4.setText("IoU:"+str(self.Iou))
